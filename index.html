@@ -3,9 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Простой учёт семейного бюджета в браузере — доходы, расходы и баланс.">
-  <title>Семейный бюджет — главная</title>
+  <meta name="description" content="Калькулятор семейного бюджета: доходы, расходы, таблица операций.">
+  <title>Калькулятор бюджета</title>
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    (function () {
+      function effectiveTheme() {
+        try {
+          var s = localStorage.getItem("site-theme");
+          if (s === "light" || s === "dark") return s;
+        } catch (e) {}
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+      document.documentElement.setAttribute("data-theme", effectiveTheme());
+    })();
+  </script>
 </head>
 <body style="display: flex; flex-direction: column; min-height: 100vh;">
   <header class="site-header">
@@ -13,44 +27,104 @@
       <a class="logo" href="index.html">Семейный бюджет</a>
       <nav class="nav" aria-label="Основная навигация">
         <a href="index.html">Главная</a>
-        <a href="budget.html">Калькулятор</a>
+        <a href="budget.html" aria-current="page">Калькулятор</a>
+        <button
+          type="button"
+          class="btn btn--ghost btn--small"
+          id="theme-toggle"
+          aria-pressed="false"
+          aria-label="Включить тёмную тему"
+        >
+          Тёмная тема
+        </button>
       </nav>
     </div>
   </header>
 
-  <main>
-    <section class="hero">
-      <span class="hero__badge">Без регистрации · данные в вашем браузере</span>
-      <h1>Учёт доходов и расходов — просто и наглядно</h1>
-      <p class="hero__lead">
-        Ведите семейный бюджет в одном месте: добавляйте операции, смотрите итоги и баланс.
-        Всё хранится локально на вашем устройстве.
-      </p>
-      <div class="hero__actions">
-        <a class="btn btn--primary" href="budget.html">Открыть калькулятор</a>
-        <a class="btn btn--ghost" href="budget.html#how">Как пользоваться</a>
-      </div>
-    </section>
+  <main class="page">
+    <h1>Калькулятор бюджета</h1>
+    <p class="page__intro">Добавьте доход или расход — таблица и итоги обновятся автоматически.</p>
 
-    <section class="features" aria-labelledby="features-title">
-      <h2 id="features-title" class="visually-hidden">Возможности</h2>
-      <article class="feature-card">
-        <h3>Доходы и расходы</h3>
-        <p>Раздельный учёт операций с датой и описанием — удобно для ежемесячного планирования.</p>
-      </article>
-      <article class="feature-card">
-        <h3>Сохранение в браузере</h3>
-        <p>Записи не пропадут после закрытия вкладки: данные сохраняются на этом компьютере.</p>
-      </article>
-      <article class="feature-card">
-        <h3>Итоги и баланс</h3>
-        <p>Сразу видно сумму доходов, расходов и остаток — без таблиц и формул.</p>
-      </article>
-    </section>
+    <div class="card" id="how">
+      <h3>Новая запись</h3>
+      <div class="form-row form-row--2">
+        <div>
+          <label for="type">Тип</label>
+          <select id="type">
+            <option value="income">Доход</option>
+            <option value="expense">Расход</option>
+          </select>
+        </div>
+        <div>
+          <label for="date">Дата</label>
+          <input id="date" type="date" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="description">Описание</label>
+          <input id="description" type="text" placeholder="Например: зарплата, продукты" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="amount">Сумма</label>
+          <input id="amount" type="number" min="0" step="0.01" placeholder="0" inputmode="decimal">
+        </div>
+      </div>
+      <button type="button" class="btn btn--primary btn-block" onclick="addEntry()">Добавить</button>
+    </div>
+
+    <div class="card">
+      <h3>Итоги</h3>
+      <div class="totals">
+        <div class="totals__item">
+          <div class="totals__label">Доход</div>
+          <div class="totals__value totals__value--income" id="income">0</div>
+        </div>
+        <div class="totals__item">
+          <div class="totals__label">Расход</div>
+          <div class="totals__value totals__value--expense" id="expense">0</div>
+        </div>
+        <div class="totals__item">
+          <div class="totals__label">Баланс</div>
+          <div class="totals__value totals__value--balance" id="balance">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <h3 style="margin: 0; flex: 1;">Операции</h3>
+        <button type="button" class="btn btn--ghost btn--small" onclick="clearAll()">Очистить всё</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Тип</th>
+              <th>Описание</th>
+              <th>Сумма</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="list"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <p style="color: var(--muted); font-size: 0.9rem; margin-top: 0;">
+      <a href="index.html">← На главную</a>
+    </p>
   </main>
 
   <footer class="site-footer">
-    <p>Пет-проект курса · статический сайт, откройте <code>index.html</code> в браузере или через локальный сервер.</p>
+    <p>Данные хранятся в localStorage этого браузера.</p>
   </footer>
+
+  <script src="js/theme.js"></script>
+  <script src="js/budget.js"></script>
 </body>
 </html>
+
